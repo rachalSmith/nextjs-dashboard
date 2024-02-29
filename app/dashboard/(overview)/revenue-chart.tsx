@@ -1,21 +1,29 @@
-import { generateYAxis } from '@/app/lib/utils';
+'use client';
+
 import { CalendarIcon } from '@heroicons/react/24/outline';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchRevenue } from '@/app/lib/data';
 
-// TODO: proper data visualization
+import {
+  BarChart,
+  Bar,
+  Rectangle,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
+import { Revenue } from '@/app/lib/definitions';
 
-export default async function RevenueChart({}) {
-  const chartHeight = 350;
-
-  const revenue = await fetchRevenue();
-
-  const { yAxisLabels, topLabel } = generateYAxis(revenue);
-
+export default async function RevenueChart({
+  revenue,
+}: {
+  revenue: Revenue[];
+}) {
   if (!revenue || revenue.length === 0) {
     return <p className="mt-4 text-gray-400">No data available.</p>;
   }
-
   return (
     <div className="w-full md:col-span-4">
       <h2 className={`${lusitana.className} mb-4 text-xl md:text-2xl`}>
@@ -23,29 +31,29 @@ export default async function RevenueChart({}) {
       </h2>
 
       <div className="rounded-xl bg-gray-50 p-4">
-        <div className="mt-0 grid grid-cols-12 items-end gap-2 rounded-md bg-white p-4 sm:grid-cols-13 md:gap-4">
-          <div
-            className="mb-6 hidden flex-col justify-between text-sm text-gray-400 sm:flex"
-            style={{ height: `${chartHeight}px` }}
-          >
-            {yAxisLabels.map((label) => (
-              <p key={label}>{label}</p>
-            ))}
-          </div>
-
-          {revenue.map((month) => (
-            <div key={month.month} className="flex flex-col items-center gap-2">
-              <div
-                className="w-full rounded-md bg-blue-300"
-                style={{
-                  height: `${(chartHeight / topLabel) * month.revenue}px`,
-                }}
-              ></div>
-              <p className="-rotate-90 text-sm text-gray-400 sm:rotate-0">
-                {month.month}
-              </p>
-            </div>
-          ))}
+        <div className="p-4-1 mt-0 h-[24.08em] rounded-md bg-white">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              barCategoryGap={8}
+              data={revenue}
+              margin={{
+                top: 32,
+                right: 16,
+                left: 16,
+                bottom: 16,
+              }}
+            >
+              <XAxis dataKey="month" stroke="1" tick={{ fill: '#a3a3a3' }} />
+              <YAxis stroke="1" tick={{ fill: '#a3a3a3' }} />
+              <Tooltip cursor={{ fill: '#fafafa' }} />
+              <Bar
+                dataKey="revenue"
+                fill="#93C5FD"
+                radius={4}
+                activeBar={<Rectangle fill="#2563eb" />}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
         <div className="flex items-center pb-2 pt-6">
           <CalendarIcon className="h-5 w-5 text-gray-500" />
