@@ -1,5 +1,4 @@
 import Cards from '@/app/dashboard/(overview)/cards';
-import RevenueChart from '@/app/dashboard/(overview)/revenue-chart';
 import LatestInvoices from '@/app/dashboard/(overview)/latest-invoices';
 import { lusitana } from '@/app/ui/fonts';
 
@@ -7,7 +6,6 @@ import { Suspense } from 'react';
 import {
   CardSkeleton,
   LatestInvoicesSkeleton,
-  RevenueChartSkeleton,
 } from '@/app/components/skeletons';
 import RevenueChartContainer from './revenue-chart-container';
 
