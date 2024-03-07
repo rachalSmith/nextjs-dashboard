@@ -1,27 +1,17 @@
 'use server';
 
-import { signIn } from '@/auth';
+import { auth, signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { z } from 'zod';
+import { InvoiceSchema, UserSchema } from './schema';
 
-const FormSchema = z.object({
-  id: z.string(),
-  customerId: z.string({ invalid_type_error: 'Please select a customer.' }),
-  amount: z.coerce
-    .number()
-    .gt(0, { message: 'Please enter an amount greater than 0' }),
-  status: z.enum(['pending', 'paid'], {
-    invalid_type_error: 'Please select an invoice status',
-  }),
-  date: z.string(),
-});
+const UpdateDisplayName = UserSchema.pick({ name: true });
 
-const CreateInvoice = FormSchema.omit({ id: true, date: true });
+const CreateInvoice = InvoiceSchema.omit({ id: true, date: true });
 
-export type State = {
+export type InvoiceState = {
   errors?: {
     customerId?: string[];
     amount?: string[];
@@ -30,7 +20,48 @@ export type State = {
   message?: string | null;
 };
 
-export async function createInvoice(prevState: State, formData: FormData) {
+export type DisplayNameState = {
+  errors?: {
+    name?: string[];
+  };
+  message?: string | null;
+};
+
+export async function updateDisplayName(
+  prevState: DisplayNameState,
+  formData: FormData,
+) {
+  const validatedFields = UpdateDisplayName.safeParse({
+    name: formData.get('display-name'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Enter a username between 1 and 32 characters',
+    };
+  }
+
+  const session = await auth();
+  const userEmail = session?.user?.email;
+
+  const { name } = validatedFields.data;
+
+  try {
+    await sql`UPDATE users 
+    SET name = ${name} 
+    WHERE email = ${userEmail}`;
+  } catch (error) {
+    return {
+      message: 'Database Error: Failed to Update Display Name.',
+    };
+  }
+}
+
+export async function createInvoice(
+  prevState: InvoiceState,
+  formData: FormData,
+) {
   const validatedFields = CreateInvoice.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
@@ -63,14 +94,14 @@ export async function createInvoice(prevState: State, formData: FormData) {
   redirect('/dashboard/invoices');
 }
 
-const UpdateInvoice = FormSchema.omit({ id: true, date: true });
+const UpdateInvoice = InvoiceSchema.omit({ id: true, date: true });
 
 export async function updateInvoice(
   id: string,
-  prevState: State,
+  prevState: InvoiceState,
   formData: FormData,
 ) {
-  const validatedFields = CreateInvoice.safeParse({
+  const validatedFields = UpdateInvoice.safeParse({
     customerId: formData.get('customerId'),
     amount: formData.get('amount'),
     status: formData.get('status'),

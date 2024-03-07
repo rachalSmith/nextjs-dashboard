@@ -10,14 +10,31 @@ import {
 } from './definitions';
 import { formatCurrency } from './utils';
 import { unstable_noStore as noStore } from 'next/cache';
+import { auth } from '@/auth';
+import { redirect } from 'next/navigation';
+import { ROUTES } from '@/auth.config';
+
+export async function fetchUser() {
+  noStore();
+
+  const session = await auth();
+  const user = session?.user?.email;
+
+  if (!user) {
+    redirect(ROUTES.LOGOUT);
+  }
+
+  const data =
+    await sql<User>`SELECT name, email, role FROM users WHERE email = ${user}`;
+
+  return data.rows;
+}
 
 export async function fetchRevenue() {
   noStore();
 
   try {
     const data = await sql<Revenue>`SELECT * FROM revenue`;
-
-    console.log('Data fetch completed after 3 seconds.');
 
     return data.rows;
   } catch (error) {

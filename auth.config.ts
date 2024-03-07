@@ -3,6 +3,7 @@ import type { NextAuthConfig } from 'next-auth';
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
+  LOGOUT: '/logout',
   DASHBOARD: '/dashboard',
 } as const;
 

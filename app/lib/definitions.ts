@@ -1,9 +1,9 @@
-// TODO: Generate using prisma instead
 export type User = {
   id: string;
   name: string;
   email: string;
   password: string;
+  role: 'superAdmin' | 'admin' | 'user';
 };
 
 export type Customer = {
